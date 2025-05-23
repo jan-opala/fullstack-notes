@@ -1,0 +1,49 @@
+POST http://127.0.0.1:8000/api/register
+Content-Type: application/json
+
+{"username": "jopala", "password": "xxx"}
+
+###
+
+POST http://127.0.0.1:8000/api/login
+Content-Type: application/json
+
+{"username": "jopala", "password": "xxx"}
+
+###
+
+GET http://127.0.0.1:8000/api/my-notes
+Content-Type: application/json
+Authorization: Token 7b6d26458cc8e4d0cf7728350ccc1105c1a77e48
+
+{}
+
+###
+
+POST http://127.0.0.1:8000/api/update-note
+Content-Type: application/json
+Authorization: Token 7b6d26458cc8e4d0cf7728350ccc1105c1a77e48
+
+{
+    "id": 9,
+    "content": "test"
+}
+
+###
+
+POST http://127.0.0.1:8000/api/new-note
+Content-Type: application/json
+Authorization: Token 7b6d26458cc8e4d0cf7728350ccc1105c1a77e48
+
+{
+    "title": "New note"
+}
+###
+
+POST http://127.0.0.1:8000/api/delete-note
+Content-Type: application/json
+Authorization: Token 7b6d26458cc8e4d0cf7728350ccc1105c1a77e48
+
+{
+    "id": 10
+}
