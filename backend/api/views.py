@@ -10,6 +10,7 @@ from rest_framework import status
 from .models import User, Note
 from .serializers import UserSerializer, NoteSerializer
 import logging
+from django.http import JsonResponse
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +48,16 @@ def Login(request):
         return Response({"detail": "No User matches the given query."}, status=status.HTTP_404_NOT_FOUND)
     token, created = Token.objects.get_or_create(user=user)
     serializer = UserSerializer(instance=user)
-    return Response({"token": token.key, "user": serializer.data})
+    response = JsonResponse({'detail': 'Login successful'})
+    response.set_cookie(
+        key = 'token',
+        value = token,
+        httponly = True,
+        secure = True,
+        samesite = 'None',
+        max_age = 3600*24*7,
+    )
+    return response
 
 @api_view(['POST'])
 def Register(request):
@@ -62,10 +72,19 @@ def Register(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) # Dodać więcej błędów!
 
 @api_view(['GET'])
-@authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated])
 def TestToken(request):
-    return Response("passed for {}".format(request.user.username))
+    token_key = request.COOKIES.get('token')
+    
+    if not token_key:
+        return Response({'detail': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    try:
+        token = Token.objects.get(key=token_key)
+        user = token.user
+    except Token.DoesNotExist:
+        return Response({'detail': 'Invalid or expired token.'}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    return Response(f"passed")
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])

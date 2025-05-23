@@ -12,6 +12,13 @@ Content-Type: application/json
 
 ###
 
+GET http://127.0.0.1:8000/api/test-token
+Content-Type: application/json
+Authorization: Token 7b6d26458cc8e4d0cf7728350ccc1105c1a77e48
+
+{}
+###
+
 GET http://127.0.0.1:8000/api/my-notes
 Content-Type: application/json
 Authorization: Token 7b6d26458cc8e4d0cf7728350ccc1105c1a77e48
