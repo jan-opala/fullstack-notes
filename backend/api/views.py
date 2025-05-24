@@ -53,8 +53,8 @@ def Login(request):
         key = 'token',
         value = token,
         httponly = True,
-        secure = True,
-        samesite = 'None',
+        secure = False,
+        samesite = 'Lax',
         max_age = 3600*24*7,
     )
     return response
@@ -87,18 +87,26 @@ def TestToken(request):
     return Response(f"passed")
 
 @api_view(['GET'])
-@authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated])
 def UserNoteList(request):
-    user_id = request.user.id
-    notes = get_list_or_404(Note, owner=user_id)
+    token_key = request.COOKIES.get('token')
+    
+    if not token_key:
+        return Response({'detail': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
+    
     try:
-        serializer = NoteSerializer(notes, many=True)
-        return Response(serializer.data)
-    except Exception as e:
-        logger.error(e)
-        print(e)
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        token = Token.objects.get(key=token_key)
+        user = token.user
+        user_id = user.id
+        notes = get_list_or_404(Note, owner=user_id)
+        try:
+            serializer = NoteSerializer(notes, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(e)
+            print(e)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Token.DoesNotExist:
+        return Response({'detail': 'Invalid or expired token.'}, status=status.HTTP_401_UNAUTHORIZED)
     
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
