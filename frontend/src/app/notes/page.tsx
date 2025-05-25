@@ -91,7 +91,7 @@ export default function Notes() {
     return null;
   }
 
-const changeNote = async (newNote: Note) => {
+const changeNote = async (newNote: Note | null) => {
   if (note != null && note.content != content) {
     const _note = note;
     _note.content = content ?? "";
@@ -104,6 +104,13 @@ const changeNote = async (newNote: Note) => {
       console.error("Failed to update note");
     }
   }
+
+  if (newNote === null) {
+    setNote(null);
+    setContent("");
+    return;
+  }
+
   setNote(newNote);
   setContent(newNote.content ?? "");
 }
@@ -172,7 +179,19 @@ const listNotes = notes == null ? (
           <div className="mx-1">+</div>
           <div className="mx-1">-</div>
         </div>
-        <div className="font-bold">FULLSTACK NOTES</div>
+        {note == null ? (
+          <div className="font-bold">FULLSTACK NOTES</div>
+        ) : (
+          <div className="flex">
+            <div onClick={() => {changeNote(null)}} className="mt-0 mr-1 cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="18" height="18" viewBox="0 0 50 25">
+                <path fill="#F44336" d="M21.5 4.5H26.501V43.5H21.5z" transform="rotate(45.001 24 24)"></path><path fill="#F44336" d="M21.5 4.5H26.5V43.501H21.5z" transform="rotate(135.008 24 24)"></path>
+              </svg>
+            </div>
+            <div className="font-bold">{note.title}</div>
+          </div>
+        )}
+        
         <div className="">{username}</div>
       </div>
 
