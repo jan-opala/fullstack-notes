@@ -106,7 +106,7 @@ export default function Login() {
         ) : (
           <>
             <span className="absolute -start-full transition-all group-hover:start-4">
-              <Image src="svg/log-in.svg" alt="" className="size-5 shadow-sm rtl:rotate-180" />
+              <Image src="svg/log-in.svg" alt="" width={20} height={20} className="size-5 shadow-sm rtl:rotate-180" />
             </span>
             <span className="text-sm font-medium transition-all group-hover:ms-4">
               Log in
