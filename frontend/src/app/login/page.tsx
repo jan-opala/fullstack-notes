@@ -1,8 +1,9 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import axios from "axios";
 import { useAuth } from "../hooks/checkAuth";
 import { redirect, useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function Login() {
   const router = useRouter();
@@ -10,7 +11,9 @@ export default function Login() {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated === null) return;
-  if (isAuthenticated) redirect('/notes');
+  if (isAuthenticated) {
+    redirect('/notes')
+  }
 
   const handleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -103,7 +106,7 @@ export default function Login() {
         ) : (
           <>
             <span className="absolute -start-full transition-all group-hover:start-4">
-              <img src="svg/log-in.svg" className="size-5 shadow-sm rtl:rotate-180" />
+              <Image src="svg/log-in.svg" alt="" className="size-5 shadow-sm rtl:rotate-180" />
             </span>
             <span className="text-sm font-medium transition-all group-hover:ms-4">
               Log in

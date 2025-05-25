@@ -53,9 +53,17 @@ def Login(request):
         key = 'token',
         value = token,
         httponly = True,
-        secure = False,
-        samesite = 'Lax',
+        secure = True,
+        samesite = 'None',
         max_age = 3600*24*7,
+    )
+    response.set_cookie(
+        key = 'username',
+        value = serializer.data['username'],
+        httponly=False,
+        secure=True,
+        samesite='None',
+        max_age=3600*24*7
     )
     return response
 
@@ -87,6 +95,21 @@ def TestToken(request):
     return Response(f"passed")
 
 @api_view(['GET'])
+def Me(request):
+    token_key = request.COOKIES.get('token')
+    
+    if not token_key:
+        return Response({'detail': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    try:
+        token = Token.objects.get(key=token_key)
+        user = token.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+    except Token.DoesNotExist:
+        return Response({'detail': 'Invalid or expired token.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+@api_view(['GET'])
 def UserNoteList(request):
     token_key = request.COOKIES.get('token')
     
@@ -109,24 +132,32 @@ def UserNoteList(request):
         return Response({'detail': 'Invalid or expired token.'}, status=status.HTTP_401_UNAUTHORIZED)
     
 @api_view(['POST'])
-@authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated])
 def UpdateNote(request):
+    token_key = request.COOKIES.get('token')
+    
+    if not token_key:
+        return Response({'detail': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
+    
     try:
-        user_id = request.user.id
-        note_id = request.data['id']
-        
-        note = get_object_or_404(Note, owner=user_id, id=note_id)
-        serializer = NoteSerializer(note, data=request.data, partial=True)
-        if not serializer.is_valid():
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer.save()
-        return Response(status=status.HTTP_200_OK)
-    except Exception as e:
-        if str(e) == "No Note matches the given query.":
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        logger.error(e)
-        return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        token = Token.objects.get(key=token_key)
+        user = token.user
+        user_id = user.id
+        try:
+            note_id = request.data['id']
+            
+            note = get_object_or_404(Note, owner=user_id, id=note_id)
+            serializer = NoteSerializer(note, data=request.data, partial=True)
+            if not serializer.is_valid():
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+            return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            if str(e) == "No Note matches the given query.":
+                return Response(status=status.HTTP_404_NOT_FOUND)
+            logger.error(e)
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Token.DoesNotExist:
+        return Response({'detail': 'Invalid or expired token.'}, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
