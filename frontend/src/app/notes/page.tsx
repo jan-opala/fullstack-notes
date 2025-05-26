@@ -271,7 +271,7 @@ const listNotes = notes == null ? (<NotesSkeleton />) : (
     )));
 
   return (
-    <div className="min-h-screen h-screen overflow-hidden font-sans">
+    <>
 
       {/* error alert */}
       {error != null &&
@@ -493,54 +493,68 @@ const listNotes = notes == null ? (<NotesSkeleton />) : (
           <p>{username}</p>
         </div>
       </div>
-      
+        
       {/* NOTE EDITOR AND SIDEBAR (NOTE LIST) */}
-      <div className={ opened ? ("h-dvh grid gap-0.5 grid-cols-[300px_1fr] bg-stone-900") : ("h-dvh grid grid-cols-[1px_1fr] gap-0.5 md:grid-cols-[300px_1fr] bg-stone-900") }>
-        <div className={ opened ? ("h-full bg-stone-900") : ("h-full bg-stone-900 invisible md:visible") }>
-          {listNotes}
-        </div>
+      <div className="flex bg-stone-900 h-[calc(100vh-50px)]">
 
-        <div className="h-full bg-stone-800 text-stone-200">
+      {/* SIDEBAR (NOTE LIST) */}
+      <div
+        className={`
+          transition-all duration-300
+          bg-stone-900
+          overflow-hidden
+          ${opened ? "w-[300px]" : "w-0"}
+          md:w-[300px]
+          flex-shrink-0
+        `}
+        style={{ minWidth: opened ? 300 : 0 }}
+      >
+        {listNotes}
+      </div>
 
+        {/* MAIN CONTENT */}
+        <div className="flex-grow flex flex-col">
           {currentNote === null && (
-              <div className="h-dvh text-center content-center">
-                <h1 className="text-3xl font-bold">Hello, {username}!</h1>
-                <p>Open a note or create a new one.</p>
-              </div>
-            )}
-          
+            <div className="flex flex-col justify-center items-center h-full bg-stone-800 text-stone-200">
+              <h1 className="text-3xl font-bold">Hello, {username}!</h1>
+              <p>Open a note or create a new one.</p>
+            </div>
+          )}
+
           {currentNote !== null ? (
             splitView ? (
-              <div className="h-full grid grid-cols-[1fr_1fr]">
-                <div className="w-full h-full">
-                  <textarea onChange={(e) => {
-                    setContent(e.target.value);
-                  }}
-                    className="h-[94%] w-full resize-none border-0 bg-transparent font-sans text-md font-normal outline-0 focus:ring-0"
-                    placeholder=" " value={content ?? ""}></textarea>
+              <div className="flex flex-grow bg-stone-800 text-stone-200 h-0 min-h-0">
+                <div className="w-1/2 p-2 flex flex-col h-full">
+                  <textarea
+                    onChange={(e) => setContent(e.target.value)}
+                    className="w-full h-full resize-none border-0 bg-transparent font-sans text-md font-normal outline-0 focus:ring-0"
+                    placeholder=" "
+                    value={content ?? ""}
+                  ></textarea>
                 </div>
-                <div className="h-full w-full p-2 overflow-y-auto">
-                  {mdContent && <div className="prose-sm" dangerouslySetInnerHTML={{ __html: mdContent }} />}
-                  
+                <div className="w-1/2 p-2 flex flex-col h-full">
+                  {mdContent && (
+                    <div
+                      className="prose-sm flex-1 overflow-auto h-full"
+                      style={{ maxHeight: "100%" }}
+                      dangerouslySetInnerHTML={{ __html: mdContent }}
+                    />
+                  )}
                 </div>
               </div>
             ) : (
-              <div className="h-full">
-                <div className="w-full h-full">
-                  <textarea onChange={(e) => {
-                    setContent(e.target.value);
-                  }}
-                    className="h-[94%] w-full resize-none border-0 bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0"
-                    placeholder=" " value={content ?? ""}></textarea>
-                </div>
+              <div className="flex-grow bg-stone-800 text-stone-200 p-2">
+                <textarea
+                  onChange={(e) => setContent(e.target.value)}
+                  className="w-full h-full resize-none border-0 bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0"
+                  placeholder=" "
+                  value={content ?? ""}
+                ></textarea>
               </div>
             )
           ) : null}
-
-
         </div>
-
       </div>
-    </div>
+    </>
   );
 }
