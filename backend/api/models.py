@@ -15,6 +15,11 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.username} ({self.id})"
 
+class PreserveWhitespaceTextField(models.TextField):
+    def get_prep_value(self, value):
+        # Ensure the value is not stripped of whitespaces
+        return value if value is not None else ''
+
 class Note(models.Model):
     owner = models.ForeignKey(
         'User',
@@ -22,7 +27,7 @@ class Note(models.Model):
         related_name = 'notes'
     )
     title = models.CharField(max_length=100)
-    content = models.TextField(blank=True)
+    content = PreserveWhitespaceTextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     def __str__(self):

@@ -156,11 +156,11 @@ def UpdateNote(request):
         user_id = user.id
         try:
             note_id = request.data['id']
-            
             note = get_object_or_404(Note, owner=user_id, id=note_id)
             serializer = NoteSerializer(note, data=request.data, partial=True)
             if not serializer.is_valid():
                 return Response(status=status.HTTP_400_BAD_REQUEST)
+            print(serializer)
             serializer.save()
             return Response(status=status.HTTP_200_OK)
         except Exception as e:

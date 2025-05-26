@@ -499,24 +499,24 @@ const listNotes = notes == null ? (<NotesSkeleton />) : (
           
           {currentNote !== null ? (
             splitView ? (
-              <div className="h-full grid grid-rows-[40px_1fr]">
+              <div className="h-full grid grid-cols-[1fr_1fr]">
                 <div className="w-full h-full">
                   <textarea onChange={(e) => {
                     setContent(e.target.value);
                   }}
-                    className="h-[99%] w-full resize-none border-0 bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0"
+                    className="h-[94%] w-full resize-none border bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0"
                     placeholder=" " value={content ?? ""}></textarea>
-                  </div>
+                </div>
               </div>
             ) : (
-              <div className="h-full grid grid-rows-[40px_1fr]">
+              <div className="h-full">
                 <div className="w-full h-full">
                   <textarea onChange={(e) => {
                     setContent(e.target.value);
                   }}
-                    className="h-[99%] w-full resize-none border-0 bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0"
+                    className="h-[94%] w-full resize-none border-0 bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0"
                     placeholder=" " value={content ?? ""}></textarea>
-                  </div>
+                </div>
               </div>
             )
           ) : null}
