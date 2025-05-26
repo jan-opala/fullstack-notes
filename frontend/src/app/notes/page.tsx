@@ -10,7 +10,6 @@ import html from 'remark-html';
 import DOMPurify from 'dompurify';
 
 // TODO:
-// Markdown implementation (edit view and markdown view OR combined)
 // Make it beautiful
 
 function SidebarButton({ opened, setOpened }: { opened: boolean; setOpened: React.Dispatch<React.SetStateAction<boolean>> }) {
@@ -18,7 +17,7 @@ function SidebarButton({ opened, setOpened }: { opened: boolean; setOpened: Reac
     return (
       <button onClick={() => {
         setOpened(false);
-      }} className="absolute top-1/2 left-[266px] transform -translate-y-1/2 bg-stone-700 text-black p-2 rounded-l-md shadow-md hover:bg-stone-600">
+      }} className="absolute top-1/2 left-[164px] transform -translate-y-1/2 bg-stone-700 text-black p-2 rounded-l-md shadow-md hover:bg-stone-600 transition-all duration-500 delay-25 opacity-50">
         <svg
           className="w-5 h-5"
           fill="none"
@@ -35,7 +34,7 @@ function SidebarButton({ opened, setOpened }: { opened: boolean; setOpened: Reac
     return (
       <button onClick={() => {
         setOpened(true);
-      }} className="absolute top-1/2 left-0 transform -translate-y-1/2 bg-stone-700 text-black p-2 rounded-r-md shadow-md hover:bg-stone-600">
+      }} className="absolute top-1/2 left-0 transform -translate-y-1/2 bg-stone-700 text-black p-2 rounded-r-md shadow-md hover:bg-stone-600 transition-all duration-500 delay-25 opacity-50">
         <svg
           className="w-5 h-5"
           fill="none"
@@ -73,7 +72,9 @@ export default function Notes() {
   const [ uploading, setUploading ] = useState<boolean>(false);
   const [ renaming, setRenaming ] = useState<boolean>(false);
   const [ removing, setRemoving ] = useState<boolean>(false);
-  const [ splitView, setSplitView ] = useState<boolean>(true);
+  const [ splitView, setSplitView ] = useState<boolean>(false);
+  // const [ mdView, setMdView ] = useState<boolean>(false);
+
 
   // fetch username from cookie
   useEffect(() => {
@@ -500,14 +501,14 @@ const listNotes = notes == null ? (<NotesSkeleton />) : (
       {/* SIDEBAR (NOTE LIST) */}
       <div
         className={`
-          transition-all duration-300
+          transition-all duration-500
           bg-stone-900
           overflow-hidden
-          ${opened ? "w-[300px]" : "w-0"}
+          ${opened ? "w-[200px]" : "w-0"}
           md:w-[300px]
           flex-shrink-0
         `}
-        style={{ minWidth: opened ? 300 : 0 }}
+        style={{ minWidth: opened ? 200 : 0 }}
       >
         {listNotes}
       </div>
@@ -521,38 +522,44 @@ const listNotes = notes == null ? (<NotesSkeleton />) : (
             </div>
           )}
 
-          {currentNote !== null ? (
-            splitView ? (
-              <div className="flex flex-grow bg-stone-800 text-stone-200 h-0 min-h-0">
-                <div className="w-1/2 p-2 flex flex-col h-full">
-                  <textarea
-                    onChange={(e) => setContent(e.target.value)}
-                    className="w-full h-full resize-none border-0 bg-transparent font-sans text-md font-normal outline-0 focus:ring-0"
-                    placeholder=" "
-                    value={content ?? ""}
-                  ></textarea>
-                </div>
-                <div className="w-1/2 p-2 flex flex-col h-full">
-                  {mdContent && (
-                    <div
-                      className="prose-sm flex-1 overflow-auto h-full"
-                      style={{ maxHeight: "100%" }}
-                      dangerouslySetInnerHTML={{ __html: mdContent }}
-                    />
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="flex-grow bg-stone-800 text-stone-200 p-2">
-                <textarea
-                  onChange={(e) => setContent(e.target.value)}
-                  className="w-full h-full resize-none border-0 bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0"
-                  placeholder=" "
-                  value={content ?? ""}
-                ></textarea>
-              </div>
-            )
-          ) : null}
+{currentNote !== null ? (
+  splitView ? (
+<div
+  className={`
+    flex flex-grow bg-stone-800 text-stone-200
+    flex-col sm:flex-row
+    min-h-0
+  `}
+>
+  <div className="flex-1 p-2 flex flex-col min-h-0">
+    <textarea
+      onChange={(e) => setContent(e.target.value)}
+      className="flex-1 min-h-0 w-full resize-none border-0 bg-transparent font-sans text-md font-normal outline-0 focus:ring-0 scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900"
+      placeholder=" "
+      value={content ?? ""}
+    ></textarea>
+  </div>
+  <div className="flex-1 p-5 flex flex-col min-h-0">
+    {mdContent && (
+      <div
+        className="prose-sm flex-1 overflow-auto scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900 min-h-0"
+        style={{ maxHeight: "100%" }}
+        dangerouslySetInnerHTML={{ __html: mdContent }}
+      />
+    )}
+  </div>
+</div>
+  ) : (
+    <div className="flex-grow bg-stone-800 text-stone-200 p-2">
+      <textarea
+        onChange={(e) => setContent(e.target.value)}
+        className="w-full h-full resize-none border-0 bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0 scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900"
+        placeholder=" "
+        value={content ?? ""}
+      ></textarea>
+    </div>
+  )
+) : null}
         </div>
       </div>
     </>

@@ -17,5 +17,6 @@ export default {
   plugins: [
     require('@tailwindcss/forms'),
     require('@tailwindcss/typography'),
+    require('tailwind-scrollbar'),
   ],
 } satisfies Config;
