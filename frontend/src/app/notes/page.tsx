@@ -9,7 +9,6 @@ import Image from 'next/image';
 // TODO:
 // Markdown implementation (edit view and markdown view OR combined)
 // Make it beautiful
-// After choosing note on mobile, close the sidebar.
 
 function SidebarButton({ opened, setOpened }: { opened: boolean; setOpened: React.Dispatch<React.SetStateAction<boolean>> }) {
   if (opened == true){
@@ -159,7 +158,6 @@ const changeNote = async (newNote: Note | null) => {
       setError("Failed to sync the note with the server, be aware of possibility of losing your data!");
       setTimeout(() => {setError(null)}, 15000);
     }
-
   }
 
   if (newNote === null) {
@@ -170,6 +168,7 @@ const changeNote = async (newNote: Note | null) => {
 
   setCurrentNote(newNote);
   setContent(newNote.content ?? "");
+  setOpened(false);
 }
 
 const renameNote = async (note: Note | null, newTitle: string | null) => {
