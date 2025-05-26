@@ -69,6 +69,7 @@ export default function Notes() {
   const [ uploading, setUploading ] = useState<boolean>(false);
   const [ renaming, setRenaming ] = useState<boolean>(false);
   const [ removing, setRemoving ] = useState<boolean>(false);
+  const [ splitView, setSplitView ] = useState<boolean>(false);
 
   // fetch username from cookie
   useEffect(() => {
@@ -489,29 +490,37 @@ const listNotes = notes == null ? (<NotesSkeleton />) : (
 
         <div className="h-full bg-stone-800 text-stone-200">
 
-          {currentNote === null ? (
-
-            username == null ? (
-              <div className="h-dvh text-center content-center">
-              </div>
-            ) : (
+          {currentNote === null && (
               <div className="h-dvh text-center content-center">
                 <h1 className="text-3xl font-bold">Hello, {username}!</h1>
                 <p>Open a note or create a new one.</p>
               </div>
-            )
-
-          ) : (
-            <div className="h-full grid grid-rows-[40px_1fr]">
+            )}
+          
+          {currentNote !== null ? (
+            splitView ? (
+              <div className="h-full grid grid-rows-[40px_1fr]">
                 <div className="w-full h-full">
                   <textarea onChange={(e) => {
                     setContent(e.target.value);
                   }}
-      className="h-[99%] w-full resize-none border-0 bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0"
-      placeholder=" " value={content ?? ""}></textarea>
-                </div>
-            </div>
-          ) }
+                    className="h-[99%] w-full resize-none border-0 bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0"
+                    placeholder=" " value={content ?? ""}></textarea>
+                  </div>
+              </div>
+            ) : (
+              <div className="h-full grid grid-rows-[40px_1fr]">
+                <div className="w-full h-full">
+                  <textarea onChange={(e) => {
+                    setContent(e.target.value);
+                  }}
+                    className="h-[99%] w-full resize-none border-0 bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0"
+                    placeholder=" " value={content ?? ""}></textarea>
+                  </div>
+              </div>
+            )
+          ) : null}
+
 
         </div>
 
