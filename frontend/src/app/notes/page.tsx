@@ -5,6 +5,9 @@ import { useAuth } from "../hooks/checkAuth";
 import { useNotes } from "../hooks/useNotes";
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
+import { remark } from 'remark';
+import html from 'remark-html';
+import DOMPurify from 'dompurify';
 
 // TODO:
 // Markdown implementation (edit view and markdown view OR combined)
@@ -63,13 +66,14 @@ export default function Notes() {
   const { isAuthenticated } = useAuth();
   const { notes, refreshNotes } = useNotes(isAuthenticated);
   const [ currentNote, setCurrentNote ] = useState<Note | null>(null);
+  const [ mdContent, setMdContent ] = useState<string | null>(null);
   const [ content, setContent ] = useState<string | null>(null);
   const [ username, setUsername ] = useState<string | null>(null);
   const [ error, setError ] = useState<string | null>(null);
   const [ uploading, setUploading ] = useState<boolean>(false);
   const [ renaming, setRenaming ] = useState<boolean>(false);
   const [ removing, setRemoving ] = useState<boolean>(false);
-  const [ splitView, setSplitView ] = useState<boolean>(false);
+  const [ splitView, setSplitView ] = useState<boolean>(true);
 
   // fetch username from cookie
   useEffect(() => {
@@ -92,7 +96,7 @@ export default function Notes() {
   }
   }, [notes]);
 
-  // Upload content of note after user stops typing for 1250ms
+  // Upload content of note AND parse markdown after user stops typing for 1250ms
   useEffect(() => {
     if (!currentNote || content === currentNote.content) return;
     setUploading(true);
@@ -111,6 +115,14 @@ export default function Notes() {
         setTimeout(() => {setError(null)}, 15000);
       }
       setUploading(false);
+      if (content != null){
+        const markdown = await remark().use(html).process(content);
+        const markdownPurified = DOMPurify.sanitize(markdown.toString());
+        console.log(markdownPurified);
+        setMdContent(markdownPurified);
+      }
+
+      
     }, 1250);
 
     return () => {
@@ -504,8 +516,12 @@ const listNotes = notes == null ? (<NotesSkeleton />) : (
                   <textarea onChange={(e) => {
                     setContent(e.target.value);
                   }}
-                    className="h-[94%] w-full resize-none border bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0"
+                    className="h-[94%] w-full resize-none border-0 bg-transparent font-sans text-md font-normal outline-0 focus:ring-0"
                     placeholder=" " value={content ?? ""}></textarea>
+                </div>
+                <div className="h-full w-full p-2 overflow-y-auto">
+                  {mdContent && <div className="prose-sm" dangerouslySetInnerHTML={{ __html: mdContent }} />}
+                  
                 </div>
               </div>
             ) : (

@@ -160,7 +160,6 @@ def UpdateNote(request):
             serializer = NoteSerializer(note, data=request.data, partial=True)
             if not serializer.is_valid():
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-            print(serializer)
             serializer.save()
             return Response(status=status.HTTP_200_OK)
         except Exception as e:
