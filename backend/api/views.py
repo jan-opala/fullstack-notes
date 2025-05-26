@@ -187,7 +187,7 @@ def NewNote(request):
     if not serializer.is_valid():
         return Response(status=status.HTTP_400_BAD_REQUEST)
     serializer.save(owner=user)
-    return Response(status=status.HTTP_200_OK)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 def DeleteNote(request):

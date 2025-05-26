@@ -8,7 +8,6 @@ import Image from 'next/image';
 
 // TODO:
 // Markdown implementation (edit view and markdown view OR combined)
-// When creating a note open it as default
 // Make it beautiful
 // After choosing note on mobile, close the sidebar.
 
@@ -64,13 +63,13 @@ export default function Notes() {
   const [ opened, setOpened ] = useState(false);
   const { isAuthenticated } = useAuth();
   const { notes, refreshNotes } = useNotes(isAuthenticated);
-  const [currentNote, setCurrentNote] = useState<Note | null>(null);
-  const [content, setContent] = useState<string | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState<boolean>(false);
-  const [renaming, setRenaming] = useState<boolean>(false);
-  const [removing, setRemoving] = useState<boolean>(false);
+  const [ currentNote, setCurrentNote ] = useState<Note | null>(null);
+  const [ content, setContent ] = useState<string | null>(null);
+  const [ username, setUsername ] = useState<string | null>(null);
+  const [ error, setError ] = useState<string | null>(null);
+  const [ uploading, setUploading ] = useState<boolean>(false);
+  const [ renaming, setRenaming ] = useState<boolean>(false);
+  const [ removing, setRemoving ] = useState<boolean>(false);
 
   // fetch username from cookie
   useEffect(() => {
@@ -223,6 +222,7 @@ const createNote = async () => {
       setTimeout(() => {setError(null)}, 15000);
     }
     refreshNotes();
+    changeNote(res.data)
   } catch (error) {
     setError("Failed to create a new note.");
     setTimeout(() => {setError(null)}, 15000);
