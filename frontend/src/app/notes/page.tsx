@@ -6,6 +6,7 @@ import { useNotes } from "../hooks/useNotes";
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
 import { remark } from 'remark';
+import remarkGfm from 'remark-gfm';
 import html from 'remark-html';
 import DOMPurify from 'dompurify';
 
@@ -150,13 +151,22 @@ export default function Notes() {
     return null;
   }
 
+  function addClassToAllElements(html: string, className: string) {
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html;
+    wrapper.querySelectorAll("*").forEach(el => el.classList.add(className));
+    return wrapper.innerHTML;
+  }
+
   const parseMarkdown = async (content: string | null) => {
     if (content != null){
-      const markdown = await remark().use(html).process(content);
+      const markdown = await remark().use(remarkGfm).use(html).process(content);
       const markdownPurified = DOMPurify.sanitize(markdown.toString());
-      setMdContent(markdownPurified);
+      const markdownPurifiedWithClasses = addClassToAllElements(markdownPurified, "wrap-break-words")
+      const markdownWithClasses = addClassToAllElements(markdown.toString(), "wrap-break-words")
+      if (mdContent != markdownWithClasses) { setMdContent(markdownWithClasses);}
     } else {
-      setMdContent(null);
+      if (mdContent != null) { setMdContent(null);}
     }
   }
 
@@ -538,14 +548,21 @@ export default function Notes() {
 
           {currentNote !== null ? (
           splitView ? (
-            <div className={`flex flex-grow bg-stone-800 text-stone-200 flex-col sm:flex-row min-h-0 font-sans`}>
-              <div className="flex-1 p-2 flex flex-col min-h-0">
+            <div className="flex flex-col sm:flex-row flex-grow bg-stone-800 text-stone-200 min-h-0 font-sans">
+              <div className="flex-1 p-3.5 flex flex-col min-h-0">
                 <textarea onChange={(e) => setContent(e.target.value)} className="flex-1 min-h-0 w-full resize-none border-0 bg-transparent font-sans text-md font-normal outline-0 focus:ring-0 scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900" placeholder=" " value={content ?? ""}></textarea>
               </div>
-              <div className="flex-1 p-5 flex flex-col min-h-0">
-                {mdContent && (<div className="prose-sm flex-1 overflow-auto scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900 min-h-0" style={{ maxHeight: "100%" }} dangerouslySetInnerHTML={{ __html: mdContent }} />)}
+              <div className="p-0 flex-1 min-h-0 min-w-0 font-sans flex flex-col">
+                {mdContent && (
+                  <div
+                    className="prose prose-invert prose-sm overflow-auto break-words break-all scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900 flex-1 min-h-0 min-w-0 p-5 max-w-[100%]"
+                    dangerouslySetInnerHTML={{ __html: mdContent }}
+                  />
+                )}
               </div>
             </div>
+
+
           ) : (
             <div className="flex-grow bg-stone-800 text-stone-200 p-2 font-sans">
               <textarea className="w-full h-full resize-none border-0 bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0 scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900" onChange={(e) => setContent(e.target.value)} placeholder=" " value={content ?? ""} />
