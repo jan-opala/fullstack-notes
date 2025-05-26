@@ -87,17 +87,19 @@ export default function Notes() {
     if (currentNote) {
       
       const updatedNote = notes?.find((note) => note.id === currentNote.id);
-      if (updatedNote) {
+      if (updatedNote && (updatedNote.content != content || updatedNote.title != currentNote.title)) {
         setCurrentNote(updatedNote);
         setContent(updatedNote.content);
-      } else {
+        parseMarkdown(updatedNote.content);
+      } else if (!updatedNote) {
         setCurrentNote(null);
         setContent(null);
+        parseMarkdown(null);
       }
   }
   }, [notes]);
 
-  // Upload content of note AND parse markdown after user stops typing for 1250ms
+  // Upload content of note after user stops typing for 1250ms
   useEffect(() => {
     if (!currentNote || content === currentNote.content) return;
     setUploading(true);
@@ -116,14 +118,7 @@ export default function Notes() {
         setTimeout(() => {setError(null)}, 15000);
       }
       setUploading(false);
-      if (content != null){
-        const markdown = await remark().use(html).process(content);
-        const markdownPurified = DOMPurify.sanitize(markdown.toString());
-        console.log(markdownPurified);
-        setMdContent(markdownPurified);
-      }
-
-      
+      parseMarkdown(content);      
     }, 1250);
 
     return () => {
@@ -155,109 +150,125 @@ export default function Notes() {
     return null;
   }
 
-const changeNote = async (newNote: Note | null) => {
-  if (currentNote != null && currentNote.content != content) {
-    const _note = currentNote;
-    _note.content = content ?? "";
-    try {
-      const res = await axios.post("http://localhost:8000/api/update-note", {
-        "id": _note.id,
-        "content": _note.content
-      }, {withCredentials: true,});
-      if (res.status !== 200) {
-      setError("Failed to sync the note with the server, be aware of possibility of losing your data!");
-      setTimeout(() => {setError(null)}, 15000);
-    }
-    } catch (error) {
-      setError("Failed to sync the note with the server, be aware of possibility of losing your data!");
-      setTimeout(() => {setError(null)}, 15000);
+  const parseMarkdown = async (content: string | null) => {
+    if (content != null){
+      const markdown = await remark().use(html).process(content);
+      const markdownPurified = DOMPurify.sanitize(markdown.toString());
+      setMdContent(markdownPurified);
+    } else {
+      setMdContent(null);
     }
   }
 
-  if (newNote === null) {
-    setCurrentNote(null);
-    setContent("");
-    return;
-  }
+  const toggleSplitView = () => {
+    setSplitView(prev => !prev);
+  };
 
-  setCurrentNote(newNote);
-  setContent(newNote.content ?? "");
-  setOpened(false);
-}
-
-const renameNote = async (note: Note | null, newTitle: string | null) => {
-  if (note != null && newTitle != null) {
-    const _note = note;
-    _note.title = newTitle;
-    try {
-      const res = await axios.post("http://localhost:8000/api/update-note", {
-        "id": _note.id,
-        "title": _note.title
-      }, {withCredentials: true,});
-      if (res.status !== 200) {
-      setError("Failed to change the title of the note.");
-      setTimeout(() => {setError(null)}, 15000);
-    }
-    } catch (error) {
-      setError("Failed to change the title of the note.");
-      setTimeout(() => {setError(null)}, 15000);
-    }
-  }
-}
-
-const removeNote = async (note: Note | null) => {
-  if (note != null) {
-    try {
-      const res = await axios.post("http://localhost:8000/api/delete-note", {
-        "id": note.id,
-      }, {withCredentials: true,});
-      if (res.status !== 200) {
-        setError("Failed remove the note.");
+  const changeNote = async (newNote: Note | null) => {
+    if (currentNote != null && currentNote.content != content) {
+      const _note = currentNote;
+      _note.content = content ?? "";
+      try {
+        const res = await axios.post("http://localhost:8000/api/update-note", {
+          "id": _note.id,
+          "content": _note.content
+        }, {withCredentials: true,});
+        if (res.status !== 200) {
+          setError("Failed to sync the note with the server, be aware of possibility of losing your data!");
+          setTimeout(() => {setError(null)}, 15000);
+        }
+      } catch (error) {
+        setError("Failed to sync the note with the server, be aware of possibility of losing your data!");
         setTimeout(() => {setError(null)}, 15000);
       }
-      if (note == currentNote) {
-        setCurrentNote(null);
+    }
+
+    if (newNote === null) {
+      setCurrentNote(null);
+      setContent("");
+      parseMarkdown(null);
+      return;
+    }
+
+    setCurrentNote(newNote);
+    setContent(newNote.content ?? "");
+    parseMarkdown(newNote.content);
+    setOpened(false);
+  }
+
+  const renameNote = async (note: Note | null, newTitle: string | null) => {
+    if (note != null && newTitle != null) {
+      const _note = note;
+      _note.title = newTitle;
+      try {
+        const res = await axios.post("http://localhost:8000/api/update-note", {
+          "id": _note.id,
+          "title": _note.title
+        }, {withCredentials: true,});
+        if (res.status !== 200) {
+        setError("Failed to change the title of the note.");
+        setTimeout(() => {setError(null)}, 15000);
       }
-    } catch (error) {
-      setError("Failed to remove the note.");
-      setTimeout(() => {setError(null)}, 15000);
+      } catch (error) {
+        setError("Failed to change the title of the note.");
+        setTimeout(() => {setError(null)}, 15000);
+      }
     }
   }
-}
 
-const createNote = async () => {
-  try {
-    const res = await axios.post("http://localhost:8000/api/new-note", {
-      "title": "New note"
-    }, {withCredentials: true,});
-    if (res.status !== 200) {
+  const removeNote = async (note: Note | null) => {
+    if (note != null) {
+      try {
+        const res = await axios.post("http://localhost:8000/api/delete-note", {
+          "id": note.id,
+        }, {withCredentials: true,});
+        if (res.status !== 200) {
+          setError("Failed remove the note.");
+          setTimeout(() => {setError(null)}, 15000);
+        }
+        if (note == currentNote) {
+          setCurrentNote(null);
+        }
+      } catch (error) {
+        setError("Failed to remove the note.");
+        setTimeout(() => {setError(null)}, 15000);
+      }
+    }
+  }
+
+  const createNote = async () => {
+    try {
+      const res = await axios.post("http://localhost:8000/api/new-note", {
+        "title": "New note"
+      }, {withCredentials: true});
+      if (res.status !== 200) {
+        setError("Failed to create a new note.");
+        setTimeout(() => {setError(null)}, 15000);
+      }
+      refreshNotes();
+      changeNote(res.data)
+    } catch (error) {
       setError("Failed to create a new note.");
       setTimeout(() => {setError(null)}, 15000);
     }
-    refreshNotes();
-    changeNote(res.data)
-  } catch (error) {
-    setError("Failed to create a new note.");
-    setTimeout(() => {setError(null)}, 15000);
   }
-}
 
 
-function NotesSkeleton() {
-  return (
-    <div>
-      {[...Array(5)].map((_, idx) => (
-        <div
-          key={idx}
-          className="animate-pulse bg-stone-700 h-5 my-2 ml-1 rounded"
-          style={{ width: `${70 + Math.random() * 20}%` }}
-        />
-      ))}
-    </div>
-  );
-}
+  function NotesSkeleton() {
+    return (
+      <div>
+        {[...Array(5)].map((_, idx) => (
+          <div
+            key={idx}
+            className="animate-pulse bg-stone-700 h-5 my-2 ml-1 rounded"
+            style={{ width: `${70 + Math.random() * 20}%` }}
+          />
+        ))}
+      </div>
+    );
+  }
 
-const listNotes = notes == null ? (<NotesSkeleton />) : (
+  const listNotes = notes == null ? (<NotesSkeleton />) : (
     notes.map(nnote => (
       <div
         onClick={() => { changeNote(nnote); }}
@@ -269,7 +280,7 @@ const listNotes = notes == null ? (<NotesSkeleton />) : (
       >
         {nnote.title}
       </div>
-    )));
+  )));
 
   return (
     <>
@@ -470,7 +481,7 @@ const listNotes = notes == null ? (<NotesSkeleton />) : (
 
 
       {/* TOP BAR */}
-      <div className="flex flex-wrap items-center justify-between mx-auto bg-stone-900 pl-2 pr-2 text-white h-[50px] border-white border-b">
+      <div className="flex flex-wrap items-center justify-between mx-auto bg-stone-900 pl-2 pr-2 text-white h-[50px] border-white border-b font-sans">
         <div className="font-bold flex text-xl items-center">
           <div onClick={createNote} className="mx-1 cursor-pointer"><Image alt="" src="svg/create.svg" width={20} height={20} /></div>
         </div>
@@ -490,7 +501,9 @@ const listNotes = notes == null ? (<NotesSkeleton />) : (
         )}
         
         <div className="flex items-center">
-
+          <button className="mr-2" onClick={toggleSplitView}>
+            <Image alt="" src="svg/view-split.svg" width={20} height={20} />
+          </button>
           <p>{username}</p>
         </div>
       </div>
@@ -507,6 +520,7 @@ const listNotes = notes == null ? (<NotesSkeleton />) : (
           ${opened ? "w-[200px]" : "w-0"}
           md:w-[300px]
           flex-shrink-0
+          font-sans
         `}
         style={{ minWidth: opened ? 200 : 0 }}
       >
@@ -514,7 +528,7 @@ const listNotes = notes == null ? (<NotesSkeleton />) : (
       </div>
 
         {/* MAIN CONTENT */}
-        <div className="flex-grow flex flex-col">
+        <div className="flex-grow flex flex-col font-sans">
           {currentNote === null && (
             <div className="flex flex-col justify-center items-center h-full bg-stone-800 text-stone-200">
               <h1 className="text-3xl font-bold">Hello, {username}!</h1>
@@ -524,21 +538,21 @@ const listNotes = notes == null ? (<NotesSkeleton />) : (
 
           {currentNote !== null ? (
           splitView ? (
-            <div className={`flex flex-grow bg-stone-800 text-stone-200 flex-col sm:flex-row min-h-0`}>
-            <div className="flex-1 p-2 flex flex-col min-h-0">
-              <textarea onChange={(e) => setContent(e.target.value)} className="flex-1 min-h-0 w-full resize-none border-0 bg-transparent font-sans text-md font-normal outline-0 focus:ring-0 scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900" placeholder=" " value={content ?? ""}></textarea>
-            </div>
-            <div className="flex-1 p-5 flex flex-col min-h-0">
-              {mdContent && (
-                <div className="prose-sm flex-1 overflow-auto scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900 min-h-0" style={{ maxHeight: "100%" }} dangerouslySetInnerHTML={{ __html: mdContent }} />)}</div>
+            <div className={`flex flex-grow bg-stone-800 text-stone-200 flex-col sm:flex-row min-h-0 font-sans`}>
+              <div className="flex-1 p-2 flex flex-col min-h-0">
+                <textarea onChange={(e) => setContent(e.target.value)} className="flex-1 min-h-0 w-full resize-none border-0 bg-transparent font-sans text-md font-normal outline-0 focus:ring-0 scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900" placeholder=" " value={content ?? ""}></textarea>
+              </div>
+              <div className="flex-1 p-5 flex flex-col min-h-0">
+                {mdContent && (<div className="prose-sm flex-1 overflow-auto scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900 min-h-0" style={{ maxHeight: "100%" }} dangerouslySetInnerHTML={{ __html: mdContent }} />)}
+              </div>
             </div>
           ) : (
-            <div className="flex-grow bg-stone-800 text-stone-200 p-2">
+            <div className="flex-grow bg-stone-800 text-stone-200 p-2 font-sans">
               <textarea className="w-full h-full resize-none border-0 bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0 scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900" onChange={(e) => setContent(e.target.value)} placeholder=" " value={content ?? ""} />
             </div>
           )) : null}
         </div>
-        
+
       </div>
     </>
   );
