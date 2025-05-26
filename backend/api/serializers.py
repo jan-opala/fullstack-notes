@@ -8,7 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'username', 'password', 'email', 'role']
 
 class NoteSerializer(serializers.ModelSerializer):
-    content = serializers.CharField(trim_whitespace=False)
+    content = serializers.CharField(trim_whitespace=False, allow_null=True, allow_blank=True, required=False)
     class Meta:
         model = Note
         fields = ['id', 'owner', 'title', 'content', 'created_at', 'updated_at']
