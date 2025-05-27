@@ -10,72 +10,46 @@ import remarkGfm from 'remark-gfm';
 import html from 'remark-html';
 import DOMPurify from 'dompurify';
 
-// TODO:
-// Make it beautiful
-
+// Minimalistic Sidebar Toggle Button
 function SidebarButton({ opened, setOpened }: { opened: boolean; setOpened: React.Dispatch<React.SetStateAction<boolean>> }) {
-  if (opened == true){
-    return (
-      <button onClick={() => {
-        setOpened(false);
-      }} className="absolute top-1/2 left-[164px] transform -translate-y-1/2 bg-stone-700 text-black p-2 rounded-l-md shadow-md hover:bg-stone-600 transition-all duration-500 delay-25 opacity-50">
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
+  return (
+    <button
+      onClick={() => setOpened(!opened)}
+      className={`absolute top-1/2 left-0 z-20 transform -translate-y-1/2 bg-stone-800 text-stone-400 p-2 rounded-r-md shadow hover:bg-stone-700 transition-all duration-300 opacity-70 md:hidden`}
+      aria-label={opened ? "Close sidebar" : "Open sidebar"}
+    >
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        {opened ? (
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-    );
-  } else {
-    return (
-      <button onClick={() => {
-        setOpened(true);
-      }} className="absolute top-1/2 left-0 transform -translate-y-1/2 bg-stone-700 text-black p-2 rounded-r-md shadow-md hover:bg-stone-600 transition-all duration-500 delay-25 opacity-50">
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-          xmlns="http://www.w3.org/2000/svg"
-        >
+        ) : (
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-    );
-  }
-
+        )}
+      </svg>
+    </button>
+  );
 }
 
 export default function Notes() {
-
   type Note = {
-  id: string;
-  title: string;
-  content: string;
+    id: string;
+    title: string;
+    content: string;
   };
 
   const newTitleRef = useRef<HTMLInputElement>(null);
 
-  const [ opened, setOpened ] = useState(false);
+  const [opened, setOpened] = useState(false);
   const { isAuthenticated } = useAuth();
   const { notes, refreshNotes } = useNotes(isAuthenticated);
-  const [ currentNote, setCurrentNote ] = useState<Note | null>(null);
-  const [ mdContent, setMdContent ] = useState<string | null>(null);
-  const [ content, setContent ] = useState<string | null>(null);
-  const [ username, setUsername ] = useState<string | null>(null);
-  const [ error, setError ] = useState<string | null>(null);
-  const [ uploading, setUploading ] = useState<boolean>(false);
-  const [ renaming, setRenaming ] = useState<boolean>(false);
-  const [ removing, setRemoving ] = useState<boolean>(false);
-  const [ splitView, setSplitView ] = useState<boolean>(false);
-  // const [ mdView, setMdView ] = useState<boolean>(false);
-
+  const [currentNote, setCurrentNote] = useState<Note | null>(null);
+  const [mdContent, setMdContent] = useState<string | null>(null);
+  const [content, setContent] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [renaming, setRenaming] = useState<boolean>(false);
+  const [removing, setRemoving] = useState<boolean>(false);
+  const [splitView, setSplitView] = useState<boolean>(false);
 
   // fetch username from cookie
   useEffect(() => {
@@ -86,9 +60,8 @@ export default function Notes() {
   // Handle current note refresh when notes refresh.
   useEffect(() => {
     if (currentNote) {
-      
       const updatedNote = notes?.find((note) => note.id === currentNote.id);
-      if (updatedNote && (updatedNote.content != content || updatedNote.title != currentNote.title)) {
+      if (updatedNote && (updatedNote.content !== content || updatedNote.title !== currentNote.title)) {
         setCurrentNote(updatedNote);
         setContent(updatedNote.content);
         parseMarkdown(updatedNote.content);
@@ -97,7 +70,7 @@ export default function Notes() {
         setContent(null);
         parseMarkdown(null);
       }
-  }
+    }
   }, [notes]);
 
   // Upload content of note after user stops typing for 1250ms
@@ -111,15 +84,15 @@ export default function Notes() {
           content: content
         }, { withCredentials: true });
         if (res.status !== 200) {
-        setError("Failed to sync the note with the server, be aware of possibility of losing your data!");
-        setTimeout(() => {setError(null)}, 15000);
-      }
-      } catch (error) {
-        setError("Failed to sync the note with the server, be aware of possibility of losing your data!");
-        setTimeout(() => {setError(null)}, 15000);
+          setError("Failed to sync the note with the server.");
+          setTimeout(() => { setError(null); }, 5000);
+        }
+      } catch {
+        setError("Failed to sync the note with the server.");
+        setTimeout(() => { setError(null); }, 5000);
       }
       setUploading(false);
-      parseMarkdown(content);      
+      parseMarkdown(content);
     }, 1250);
 
     return () => {
@@ -134,17 +107,16 @@ export default function Notes() {
       const interval = setInterval(() => {
         refreshNotes();
       }, 1000);
-
       return () => clearInterval(interval);
     }
   }, [uploading]);
 
-  // Check if user is authenticated, if not redirect him to login page.
-  if (isAuthenticated === null) return(
-      <div className="flex items-center justify-center h-screen bg-black">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-stone-500"></div>
-        <span className="ml-4 text-stone-500">Authenticating...</span>
-      </div>
+  // Auth check
+  if (isAuthenticated === null) return (
+    <div className="flex items-center justify-center h-screen bg-stone-950">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-stone-500"></div>
+      <span className="ml-4 text-stone-500">Authenticating...</span>
+    </div>
   );
   if (!isAuthenticated) {
     redirect("/login");
@@ -159,110 +131,81 @@ export default function Notes() {
   }
 
   const parseMarkdown = async (content: string | null) => {
-    if (content != null){
+    if (content != null) {
       const markdown = await remark().use(remarkGfm).use(html).process(content);
-      const markdownPurified = DOMPurify.sanitize(markdown.toString());
-      const markdownPurifiedWithClasses = addClassToAllElements(markdownPurified, "wrap-break-words")
-      const markdownWithClasses = addClassToAllElements(markdown.toString(), "wrap-break-words")
-      if (mdContent != markdownWithClasses) { setMdContent(markdownWithClasses);}
+      const markdownWithClasses = addClassToAllElements(markdown.toString(), "break-words");
+      if (mdContent !== markdownWithClasses) { setMdContent(markdownWithClasses); }
     } else {
-      if (mdContent != null) { setMdContent(null);}
+      if (mdContent != null) { setMdContent(null); }
     }
-  }
-
-  const toggleSplitView = () => {
-    setSplitView(prev => !prev);
   };
 
+  const toggleSplitView = () => setSplitView(prev => !prev);
+
   const changeNote = async (newNote: Note | null) => {
-    if (currentNote != null && currentNote.content != content) {
-      const _note = currentNote;
-      _note.content = content ?? "";
+    if (currentNote && currentNote.content !== content) {
       try {
-        const res = await axios.post("http://localhost:8000/api/update-note", {
-          "id": _note.id,
-          "content": _note.content
-        }, {withCredentials: true,});
-        if (res.status !== 200) {
-          setError("Failed to sync the note with the server, be aware of possibility of losing your data!");
-          setTimeout(() => {setError(null)}, 15000);
-        }
-      } catch (error) {
-        setError("Failed to sync the note with the server, be aware of possibility of losing your data!");
-        setTimeout(() => {setError(null)}, 15000);
+        await axios.post("http://localhost:8000/api/update-note", {
+          id: currentNote.id,
+          content: content
+        }, { withCredentials: true });
+      } catch {
+        setError("Failed to sync the note with the server.");
+        setTimeout(() => { setError(null); }, 5000);
       }
     }
-
     if (newNote === null) {
       setCurrentNote(null);
       setContent("");
       parseMarkdown(null);
       return;
     }
-
     setCurrentNote(newNote);
     setContent(newNote.content ?? "");
     parseMarkdown(newNote.content);
     setOpened(false);
-  }
+  };
 
   const renameNote = async (note: Note | null, newTitle: string | null) => {
-    if (note != null && newTitle != null) {
-      const _note = note;
-      _note.title = newTitle;
+    if (note && newTitle) {
       try {
-        const res = await axios.post("http://localhost:8000/api/update-note", {
-          "id": _note.id,
-          "title": _note.title
-        }, {withCredentials: true,});
-        if (res.status !== 200) {
+        await axios.post("http://localhost:8000/api/update-note", {
+          id: note.id,
+          title: newTitle
+        }, { withCredentials: true });
+      } catch {
         setError("Failed to change the title of the note.");
-        setTimeout(() => {setError(null)}, 15000);
-      }
-      } catch (error) {
-        setError("Failed to change the title of the note.");
-        setTimeout(() => {setError(null)}, 15000);
+        setTimeout(() => { setError(null); }, 5000);
       }
     }
-  }
+  };
 
   const removeNote = async (note: Note | null) => {
-    if (note != null) {
+    if (note) {
       try {
-        const res = await axios.post("http://localhost:8000/api/delete-note", {
-          "id": note.id,
-        }, {withCredentials: true,});
-        if (res.status !== 200) {
-          setError("Failed remove the note.");
-          setTimeout(() => {setError(null)}, 15000);
-        }
-        if (note == currentNote) {
-          setCurrentNote(null);
-        }
-      } catch (error) {
+        await axios.post("http://localhost:8000/api/delete-note", {
+          id: note.id,
+        }, { withCredentials: true });
+        if (note === currentNote) setCurrentNote(null);
+      } catch {
         setError("Failed to remove the note.");
-        setTimeout(() => {setError(null)}, 15000);
+        setTimeout(() => { setError(null); }, 5000);
       }
     }
-  }
+  };
 
   const createNote = async () => {
     try {
       const res = await axios.post("http://localhost:8000/api/new-note", {
-        "title": "New note"
-      }, {withCredentials: true});
-      if (res.status !== 200) {
-        setError("Failed to create a new note.");
-        setTimeout(() => {setError(null)}, 15000);
-      }
+        title: "New note"
+      }, { withCredentials: true });
       refreshNotes();
-      changeNote(res.data)
-    } catch (error) {
+      changeNote(res.data);
+    } catch {
       setError("Failed to create a new note.");
-      setTimeout(() => {setError(null)}, 15000);
+      setTimeout(() => { setError(null); }, 5000);
     }
-  }
-
+  };
 
   function NotesSkeleton() {
     return (
@@ -270,7 +213,7 @@ export default function Notes() {
         {[...Array(5)].map((_, idx) => (
           <div
             key={idx}
-            className="animate-pulse bg-stone-700 h-5 my-2 ml-1 rounded"
+            className="animate-pulse bg-stone-800 h-4 my-2 rounded"
             style={{ width: `${70 + Math.random() * 20}%` }}
           />
         ))}
@@ -280,297 +223,228 @@ export default function Notes() {
 
   const listNotes = notes == null ? (<NotesSkeleton />) : (
     notes.map(nnote => (
-      <div
+      <button
         onClick={() => { changeNote(nnote); }}
         key={nnote.id}
-        className={nnote.id === currentNote?.id 
-          ? "text-stone-200 py-1 pl-1 border-b border-stone-600 border-solid bg-stone-800 hover:bg-stone-800 cursor-pointer"
-          : "text-stone-200 py-1 pl-1 border-b border-stone-600 border-solid hover:bg-stone-800 cursor-pointer"
-        }
+        className={`w-full text-left px-3 py-2 rounded transition font-medium
+          ${nnote.id === currentNote?.id
+            ? "bg-stone-800 text-white"
+            : "text-stone-400 hover:bg-stone-800 hover:text-white"}
+        `}
+        style={{ outline: "none" }}
       >
         {nnote.title}
+      </button>
+    ))
+  );
+
+  // Minimalistic modal
+  function Modal({ open, onClose, children }: { open: boolean, onClose: () => void, children: React.ReactNode }) {
+    if (!open) return null;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="bg-stone-900 rounded-lg shadow-lg p-6 min-w-[300px] max-w-sm w-full relative">
+          <button onClick={onClose} className="absolute top-3 right-3 text-stone-500 hover:text-stone-300" aria-label="Close">
+            <svg width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 6l8 8M6 14L14 6" /></svg>
+          </button>
+          {children}
+        </div>
       </div>
-  )));
+    );
+  }
+
+  // MarkdownPreview component
+  function MarkdownPreview({ mdContent }: { mdContent: string | null }) {
+    return (
+      <div className="flex-1 min-h-0 p-4">
+        <div className="h-full border border-stone-800 rounded-lg bg-transparent">
+          <div className="h-full overflow-auto p-3">
+            {mdContent && (
+              <div
+                className="
+                  prose prose-invert prose-img:max-w-xs prose-sm break-words max-w-full
+                  font-normal text-base min-h-full placeholder:text-stone-600
+                "
+                style={{
+                  fontFamily: "inherit",
+                  margin: 0,
+                }}
+                dangerouslySetInnerHTML={{ __html: mdContent }}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <>
-
-      {/* error alert */}
-      {error != null &&
-        <div role="alert" className="absolute top-[50px] left-1/2 -translate-x-1/2 max-w-[300px] border-s-4 border-red-700 bg-red-50 p-4">
-          <div className="flex items-center gap-2 text-red-700">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
-              <path
-                fillRule="evenodd"
-                d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
-                clipRule="evenodd"
-              />
-            </svg>
-
-            <strong className="font-medium"> Something went wrong </strong>
-          </div>
-
-          <p className="mt-2 text-sm text-red-700">
-            {error}
-          </p>
+    <div className="h-screen w-screen bg-stone-950 font-sans text-stone-200 flex flex-col">
+      {/* Error Alert */}
+      {error && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-2 rounded shadow z-50 text-sm">
+          {error}
         </div>
-      }
-      
-      {/* Mobile sidebar open button */}
-      <div className="absolute h-screen bg-stone-800 md:invisible">
-        <SidebarButton opened={opened} setOpened={setOpened} />
-      </div>
+      )}
 
-      {/* Note renaming */}
-      {renaming && 
-      <>
-        <div className="text-white absolute w-full h-full bg-transparent text-center items-center backdrop-blur-[2px]">
-          <div className="fixed inset-0 z-50 grid place-content-center bg-black/50 p-4"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modalTitle"
-            >
-            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-gray-900">
-              <div className="flex items-start justify-between">
-                <h2 id="modalTitle" className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
-                  Change title
-                </h2>
-
-                <button
-                  onClick={() => {setRenaming(false);}}
-                  type="button"
-                  className="-me-4 -mt-4 rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600 focus:outline-none dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-300"
-                  aria-label="Close"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="size-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="mt-4">
-                <p className="text-pretty text-gray-700 dark:text-gray-200">
-                  Change the note title and click done.
-                </p>
-
-                <label htmlFor="Confirm" className="mt-4 block">
-
-                  <input
-                    type="text"
-                    id="newtitle"
-                    className="mt-0.5 w-full rounded border-gray-300 shadow-sm sm:text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white"
-                    defaultValue={currentNote?.title}
-                    ref={newTitleRef}
-                  />
-                </label>
-              </div>
-
-              <footer className="mt-6 flex justify-end gap-2">
-                <button
-                  onClick={() => {setRenaming(false);}}
-                  type="button"
-                  className="rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-                >
-                  Cancel
-                </button>
-
-                <button
-                onClick={() => {
-                  
-                  const newTitle = newTitleRef.current?.value;
-                  if (newTitle == "" || newTitle == null || newTitle == undefined) {
-                    setError("Title of the note cannot be empty.");
-                    setTimeout(() => {setError(null);}, 3000)
-                    setRenaming(false);
-                    return;
-                  }
-                  if (newTitle.length > 50) {
-                    setError("Title of the note cannot be longer than 50 characters.")
-                    setTimeout(() => {setError(null);}, 3000)
-                    setRenaming(false);
-                    return;
-                  }
-                  setRenaming(false);
-                  renameNote(currentNote, newTitle);
-                  
-                }}
-                  type="button"
-                  className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-                >
-                  Done
-                </button>
-              </footer>
-            </div>
-          </div>
-        </div>
-      </>
-      }
-
-      {/* Note removing */}
-      {removing && 
-      <>
-        <div className="text-white absolute w-full h-full bg-transparent text-center items-center backdrop-blur-[2px]">
-          <div className="fixed inset-0 z-50 grid place-content-center bg-black/50 p-4"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modalTitle"
-            >
-            <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg dark:bg-gray-900">
-              <div className="flex items-start justify-between">
-                <h2 id="modalTitle" className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
-                  Remove note
-                </h2>
-
-                <button
-                  onClick={() => {setRemoving(false);}}
-                  type="button"
-                  className="-me-4 -mt-4 rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600 focus:outline-none dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-300"
-                  aria-label="Close"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="size-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="mt-4">
-                <p className="text-pretty text-gray-700 dark:text-gray-200">
-                  Are you sure you want to remove this note?
-                </p>
-              </div>
-
-              <footer className="mt-6 flex justify-end gap-2">
-                <button
-                  onClick={() => {setRemoving(false);}}
-                  type="button"
-                  className="rounded bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-                >
-                  No, cancel.
-                </button>
-
-                <button
-                onClick={() => {
-                  
-                  setRemoving(false);
-                  removeNote(currentNote);
-                  
-                }}
-                  type="button"
-                  className="rounded bg-red-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-                >
-                  Yes.
-                </button>
-              </footer>
-            </div>
-          </div>
-        </div>
-      </>
-      }
-
-
-      {/* TOP BAR */}
-      <div className="flex flex-wrap items-center justify-between mx-auto bg-stone-900 pl-2 pr-2 text-white h-[50px] border-white border-b font-sans">
-        <div className="font-bold flex text-xl items-center">
-          <div onClick={createNote} className="mx-1 cursor-pointer"><Image alt="" src="svg/create.svg" width={20} height={20} /></div>
-        </div>
-        {currentNote == null ? (
-          <div className="font-bold">NOTES</div>
-        ) : (
-          <div className="flex items-center">
-            <div onClick={() => {changeNote(null)}} className="cursor-pointer mr-2">
-              <Image alt="" src="svg/x.svg" width={22} height={22} />
-            </div>
-            <div className="font-bold">{currentNote.title}</div>
-            <div onClick={() => {setRenaming(true)}} className="ml-2 fill-white cursor-pointer"><Image alt="" src="svg/rename.svg" width={22} height={22} /></div>
-            <div onClick={() => {setRemoving(true)}} className="ml-2 fill-white cursor-pointer"><Image alt="" src="svg/delete.svg" width={22} height={22} /></div>
-            { uploading ? <div className="ml-2"><Image className="animate-bounce" alt="" src="svg/cloud.svg" width={24} height={24}/></div>
-                        : <div className="ml-2"><Image className="invisible" alt="" src="svg/cloud.svg" width={24} height={24}/></div>}
-          </div>
-        )}
-        
-        <div className="flex items-center">
-          <button className="mr-2" onClick={toggleSplitView}>
-            <Image alt="" src="svg/view-split.svg" width={20} height={20} />
-          </button>
-          <p>{username}</p>
-        </div>
-      </div>
-        
-      {/* NOTE EDITOR AND SIDEBAR (NOTE LIST) */}
-      <div className="flex bg-stone-900 h-[calc(100vh-50px)]">
-
-      {/* SIDEBAR (NOTE LIST) */}
-      <div
+      {/* Top Bar (moves to bottom on mobile) */}
+      <header
         className={`
-          transition-all duration-500
-          bg-stone-900
-          overflow-hidden
-          ${opened ? "w-[200px]" : "w-0"}
-          md:w-[300px]
-          flex-shrink-0
-          font-sans
+          flex items-center justify-between h-14 px-4 bg-stone-900 border-b border-stone-800
+          fixed w-full left-0 top-0 z-30
+          md:static md:border-b
+          transition-all
+          ${/* Move to bottom on mobile */''}
+          md:top-0
+          bottom-0
+          md:bottom-auto
+          ${typeof window !== "undefined" && window.innerWidth < 768 ? "top-auto bottom-0 border-t border-b-0" : ""}
         `}
-        style={{ minWidth: opened ? 200 : 0 }}
+        style={{
+          // On mobile, stick to bottom; on desktop, stick to top
+          top: typeof window !== "undefined" && window.innerWidth < 768 ? "auto" : 0,
+          bottom: typeof window !== "undefined" && window.innerWidth < 768 ? 0 : "auto",
+          borderTop: typeof window !== "undefined" && window.innerWidth < 768 ? "1px solid #292524" : undefined,
+          borderBottom: typeof window !== "undefined" && window.innerWidth < 768 ? "none" : undefined,
+        }}
       >
-        {listNotes}
-      </div>
-
-        {/* MAIN CONTENT */}
-        <div className="flex-grow flex flex-col font-sans">
-          {currentNote === null && (
-            <div className="flex flex-col justify-center items-center h-full bg-stone-800 text-stone-200">
-              <h1 className="text-3xl font-bold">Hello, {username}!</h1>
-              <p>Open a note or create a new one.</p>
-            </div>
-          )}
-
-          {currentNote !== null ? (
-          splitView ? (
-            <div className="flex flex-col sm:flex-row flex-grow bg-stone-800 text-stone-200 min-h-0 font-sans">
-              <div className="flex-1 p-3.5 flex flex-col min-h-0">
-                <textarea onChange={(e) => setContent(e.target.value)} className="flex-1 min-h-0 w-full resize-none border-0 bg-transparent font-sans text-md font-normal outline-0 focus:ring-0 scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900" placeholder=" " value={content ?? ""}></textarea>
-              </div>
-              <div className="p-3.5 flex-1 min-h-0 min-w-0 font-sans flex flex-col">
-                {mdContent && (
-                  <div
-                    className="prose prose-invert prose-img:max-w-xs prose-sm overflow-auto break-words break-all scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900 flex-1 min-h-0 min-w-0 p-5 max-w-[100%]"
-                    dangerouslySetInnerHTML={{ __html: mdContent }}
-                  />
-                )}
-              </div>
-            </div>
-
-
+        <button onClick={createNote} className="p-2 rounded-full hover:bg-stone-800 transition" aria-label="New note">
+          <Image alt="New" src="svg/create.svg" width={20} height={20} />
+        </button>
+        <span className="flex items-center gap-2 text-lg font-semibold tracking-tight truncate max-w-[40vw]">
+          {currentNote ? (
+            <>
+              {currentNote.title}
+              <button onClick={() => setRenaming(true)} className="p-1 rounded hover:bg-stone-800 transition" aria-label="Rename note">
+                <Image alt="Rename" src="svg/rename.svg" width={18} height={18} />
+              </button>
+              <button onClick={() => setRemoving(true)} className="p-1 rounded hover:bg-stone-800 transition" aria-label="Delete note">
+                <Image alt="Delete" src="svg/delete.svg" width={18} height={18} />
+              </button>
+              {uploading && (
+                <span className="ml-1">
+                  <Image className="animate-bounce" alt="" src="svg/cloud.svg" width={18} height={18} />
+                </span>
+              )}
+            </>
           ) : (
-            <div className="flex-grow bg-stone-800 text-stone-200 p-2 font-sans">
-              <textarea className="w-full h-full resize-none border-0 bg-transparent font-sans text-sm font-normal outline-0 focus:ring-0 scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900" onChange={(e) => setContent(e.target.value)} placeholder=" " value={content ?? ""} />
-            </div>
-          )) : null}
+            "NOTES"
+          )}
+        </span>
+        <div className="flex items-center gap-2">
+          <button className="p-2 rounded-full hover:bg-stone-800 transition" onClick={toggleSplitView} aria-label="Toggle split view">
+            <Image alt="Split" src="svg/view-split.svg" width={20} height={20} />
+          </button>
+          <span className="text-stone-400 text-sm">{username}</span>
         </div>
+      </header>
 
+      {/* Main Content */}
+      <div className="flex flex-1 min-h-0">
+        {/* Sidebar */}
+        <aside
+          className={`
+            transition-all duration-300 bg-stone-900 border-r border-stone-800
+            ${opened ? "w-48" : "w-0"}
+            md:w-64 md:block
+            overflow-y-auto
+            flex-shrink-0
+            relative
+            z-10
+          `}
+          style={{ minWidth: opened ? 192 : 0 }}
+        >
+          <nav className="flex flex-col gap-1 p-2">{listNotes}</nav>
+        </aside>
+
+        {/* Mobile Sidebar Button */}
+        <SidebarButton opened={opened} setOpened={setOpened} />
+
+        {/* Editor Area */}
+        <main className="flex-1 flex flex-col min-h-0">
+          {currentNote === null ? (
+            <div className="flex flex-col justify-center items-center h-full text-stone-400">
+              <h1 className="text-3xl font-bold mb-2">Hello, {username}!</h1>
+              <p className="text-base">Open a note or create a new one.</p>
+            </div>
+          ) : splitView ? (
+            <div className="flex flex-col sm:flex-row flex-1 min-h-0">
+              <div className="flex-1 flex flex-col min-h-0 p-4">
+                <textarea
+                  onChange={e => setContent(e.target.value)}
+                  className="flex-1 w-full resize-none bg-transparent text-base font-normal outline-none focus:ring-0 rounded-lg border border-stone-800 p-3 transition placeholder:text-stone-600"
+                  placeholder="Start typing your note..."
+                  value={content ?? ""}
+                  spellCheck={false}
+                  style={{ minHeight: 0 }}
+                />
+              </div>
+              <MarkdownPreview mdContent={mdContent} />
+            </div>
+          ) : (
+              <MarkdownPreview mdContent={mdContent} />
+          )}
+        </main>
       </div>
-    </>
+
+      {/* Rename Modal */}
+      <Modal open={renaming} onClose={() => setRenaming(false)}>
+        <h2 className="text-lg font-semibold mb-4">Rename Note</h2>
+        <input
+          type="text"
+          className="w-full rounded border border-stone-700 bg-stone-800 text-white p-2 mb-4 outline-none"
+          defaultValue={currentNote?.title}
+          ref={newTitleRef}
+          maxLength={50}
+        />
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setRenaming(false)}
+            className="px-4 py-2 rounded bg-stone-800 text-stone-300 hover:bg-stone-700 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              const newTitle = newTitleRef.current?.value?.trim();
+              if (!newTitle) {
+                setError("Title of the note cannot be empty.");
+                setTimeout(() => { setError(null); }, 3000);
+                setRenaming(false);
+                return;
+              }
+              setRenaming(false);
+              renameNote(currentNote, newTitle);
+            }}
+            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition"
+          >
+            Done
+          </button>
+        </div>
+      </Modal>
+
+      {/* Remove Modal */}
+      <Modal open={removing} onClose={() => setRemoving(false)}>
+        <h2 className="text-lg font-semibold mb-4">Remove Note</h2>
+        <p className="mb-6 text-stone-300">Are you sure you want to remove this note?</p>
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => setRemoving(false)}
+            className="px-4 py-2 rounded bg-stone-800 text-stone-300 hover:bg-stone-700 transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              setRemoving(false);
+              removeNote(currentNote);
+            }}
+            className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 transition"
+          >
+            Remove
+          </button>
+        </div>
+      </Modal>
+    </div>
   );
 }
