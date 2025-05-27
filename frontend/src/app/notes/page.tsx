@@ -552,10 +552,10 @@ export default function Notes() {
               <div className="flex-1 p-3.5 flex flex-col min-h-0">
                 <textarea onChange={(e) => setContent(e.target.value)} className="flex-1 min-h-0 w-full resize-none border-0 bg-transparent font-sans text-md font-normal outline-0 focus:ring-0 scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900" placeholder=" " value={content ?? ""}></textarea>
               </div>
-              <div className="p-0 flex-1 min-h-0 min-w-0 font-sans flex flex-col">
+              <div className="p-3.5 flex-1 min-h-0 min-w-0 font-sans flex flex-col">
                 {mdContent && (
                   <div
-                    className="prose prose-invert prose-sm overflow-auto break-words break-all scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900 flex-1 min-h-0 min-w-0 p-5 max-w-[100%]"
+                    className="prose prose-invert prose-img:max-w-xs prose-sm overflow-auto break-words break-all scrollbar-thin scrollbar-thumb-stone-700 scrollbar-track-stone-900 flex-1 min-h-0 min-w-0 p-5 max-w-[100%]"
                     dangerouslySetInnerHTML={{ __html: mdContent }}
                   />
                 )}
