@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 
 type Note = {
@@ -8,23 +8,30 @@ type Note = {
 };
 
 export const useNotes = (isAuthenticated: boolean | null) => {
-  const [notes, setNotes] = useState<Note[] | null>(null); // Use the Note type
+  const [notes, setNotes] = useState<Note[] | null>(null);
+  const userNotes = useRef<Note[] | null>(null);
 
   const fetchNotes = async () => {
     try {
       const res = await axios.get("http://localhost:8000/api/my-notes", {
         withCredentials: true,
       });
-      setNotes(Array.isArray(res.data) ? res.data : res.data.notes || []); // Ensure res.data matches the Note[] type
+      console.log(userNotes.current);
+      if (JSON.stringify(userNotes.current) !== JSON.stringify(res.data)){
+        setNotes(res.data || []);
+        console.log("set");
+        userNotes.current = res.data || [];
+      }
     } catch {
       setNotes([]);
+      userNotes.current = [];
     }
   };
 
   useEffect(() => {
-    if (!isAuthenticated) return; // Only fetch if authenticated
+    if (!isAuthenticated) return;
     fetchNotes();
   }, [isAuthenticated]);
 
-  return { notes, refreshNotes: fetchNotes };
+  return { notes, refreshNotes: fetchNotes, userNotes: userNotes.current };
 };

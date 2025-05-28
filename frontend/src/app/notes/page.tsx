@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { remark } from 'remark';
 import remarkGfm from 'remark-gfm';
 import html from 'remark-html';
-import DOMPurify from 'dompurify';
+import isEqual from 'lodash/isEqual';
 
 // Minimalistic Sidebar Toggle Button
 function SidebarButton({ opened, setOpened }: { opened: boolean; setOpened: React.Dispatch<React.SetStateAction<boolean>> }) {
@@ -51,6 +51,37 @@ export default function Notes() {
   const [removing, setRemoving] = useState<boolean>(false);
   const [splitView, setSplitView] = useState<boolean>(false);
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const scrolling = useRef<null | "textarea" | "preview">(null);
+  const lastScrollRatio = useRef<number>(0);
+
+  // Sync textarea scroll to preview
+  const handleTextareaScroll = () => {
+    if (scrolling.current === "preview") return;
+    scrolling.current = "textarea";
+    const textarea = textareaRef.current;
+    const preview = previewRef.current;
+    if (textarea && preview) {
+      const ratio = textarea.scrollTop / (textarea.scrollHeight - textarea.clientHeight);
+      preview.scrollTop = ratio * (preview.scrollHeight - preview.clientHeight);
+    }
+    setTimeout(() => { scrolling.current = null; }, 10);
+  };
+
+  // Sync preview scroll to textarea
+  const handlePreviewScroll = () => {
+    if (scrolling.current === "textarea") return;
+    scrolling.current = "preview";
+    const textarea = textareaRef.current;
+    const preview = previewRef.current;
+    if (textarea && preview) {
+      const ratio = preview.scrollTop / (preview.scrollHeight - preview.clientHeight);
+      textarea.scrollTop = ratio * (textarea.scrollHeight - textarea.clientHeight);
+    }
+    setTimeout(() => { scrolling.current = null; }, 10);
+  };
+
   // fetch username from cookie
   useEffect(() => {
     const match = document.cookie.match(/(?:^|; )username=([^;]*)/);
@@ -61,7 +92,7 @@ export default function Notes() {
   useEffect(() => {
     if (currentNote) {
       const updatedNote = notes?.find((note) => note.id === currentNote.id);
-      if (updatedNote && (updatedNote.content !== content || updatedNote.title !== currentNote.title)) {
+      if (updatedNote && (!isEqual(updatedNote.content, content) || !isEqual(updatedNote.title, currentNote.title))) {
         setCurrentNote(updatedNote);
         setContent(updatedNote.content);
         parseMarkdown(updatedNote.content);
@@ -131,6 +162,7 @@ export default function Notes() {
   }
 
   const parseMarkdown = async (content: string | null) => {
+    console.log("parse")
     if (content != null) {
       const markdown = await remark().use(remarkGfm).use(html).process(content);
       const markdownWithClasses = addClassToAllElements(markdown.toString(), "break-words");
@@ -258,7 +290,11 @@ export default function Notes() {
     return (
       <div className="flex-1 min-h-0 p-4">
         <div className="h-full border border-stone-800 rounded-lg bg-transparent">
-          <div className="h-full overflow-auto p-3">
+          <div
+            className="h-full overflow-auto p-3"
+            ref={previewRef}
+            onScroll={handlePreviewScroll}
+          >
             {mdContent && (
               <div
                 className="
@@ -371,7 +407,9 @@ export default function Notes() {
             <div className="flex flex-col sm:flex-row flex-1 min-h-0">
               <div className="flex-1 flex flex-col min-h-0 p-4">
                 <textarea
+                  ref={textareaRef}
                   onChange={e => setContent(e.target.value)}
+                  onScroll={handleTextareaScroll}
                   className="flex-1 w-full resize-none bg-transparent text-base font-normal outline-none focus:ring-0 rounded-lg border border-stone-800 p-3 transition placeholder:text-stone-600"
                   placeholder="Start typing your note..."
                   value={content ?? ""}
